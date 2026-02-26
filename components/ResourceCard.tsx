@@ -1,6 +1,6 @@
 'use client';
 
-import { useOptimistic, useState } from 'react';
+import { useState } from 'react';
 
 interface ResourceCardProps {
   resource: any;
