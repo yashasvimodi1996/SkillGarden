@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  hobbies   UserHobby[]
+  resources UserResource[]
+
+  @@map("users")
+}
+
+model Hobby {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  name        String
+  description String?
+  icon        String?
+  color       String?   @default("#10b981")
+
+  users     UserHobby[]
+  resources Resource[]
+  paths     LearningPath[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("hobbies")
+}
+
+model UserHobby {
+  id        String   @id @default(cuid())
+  userId    String
+  hobbyId   String
+  level     String   @default("beginner") // beginner, intermediate, advanced
+  goals     String?
+  addedAt   DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hobbyId])
+  @@map("user_hobbies")
+}
+
+model Resource {
+  id              String          @id @default(cuid())
+  title           String
+  description     String?
+  type            String          // "video", "article", "community"
+  url             String
+  source          String?         // e.g., "YouTube", "Medium", "Reddit"
+  hobbyId         String
+  level           String          // "beginner", "intermediate", "advanced"
+  timeMinutes     Int?
+  language        String          @default("English")
+  freePaid        String          @default("free") // "free", "paid", "freemium"
+  popularityScore Float           @default(0.5)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  hobby   Hobby              @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+  tags    ResourceTag[]
+  users   UserResource[]
+  modules ModuleResource[]
+
+  @@index([hobbyId])
+  @@index([level])
+  @@map("resources")
+}
+
+model Tag {
+  id        String        @id @default(cuid())
+  name      String
+  createdAt DateTime      @default(now())
+
+  resources ResourceTag[]
+
+  @@unique([name])
+  @@map("tags")
+}
+
+model ResourceTag {
+  id         String   @id @default(cuid())
+  resourceId String
+  tagId      String
+  createdAt  DateTime @default(now())
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceId, tagId])
+  @@map("resource_tags")
+}
+
+model UserResource {
+  id        String   @id @default(cuid())
+  userId    String
+  resourceId String
+  saved     Boolean  @default(false)
+  status    String   @default("not-started") // "not-started", "in-progress", "done"
+  feedback  String?  // "up", "down", or null
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resourceId])
+  @@map("user_resources")
+}
+
+model LearningPath {
+  id          String   @id @default(cuid())
+  hobbyId     String
+  name        String   // "Beginner", "Intermediate", "Advanced"
+  level       String   // "beginner", "intermediate", "advanced"
+  description String?
+  order       Int      @default(0)
+
+  hobby   Hobby         @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+  modules PathModule[]
+
+  @@unique([hobbyId, level])
+  @@map("learning_paths")
+}
+
+model PathModule {
+  id          String   @id @default(cuid())
+  pathId      String
+  name        String
+  description String?
+  order       Int      @default(0)
+
+  path      LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  resources ModuleResource[]
+  createdAt DateTime     @default(now())
+
+  @@map("path_modules")
+}
+
+model ModuleResource {
+  id         String   @id @default(cuid())
+  moduleId   String
+  resourceId String
+  order      Int      @default(0)
+
+  module    PathModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  resource  Resource   @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  @@index([moduleId])
+  @@index([resourceId])
+  @@map("module_resources")
+}
