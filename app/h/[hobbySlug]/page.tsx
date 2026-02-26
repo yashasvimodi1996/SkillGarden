@@ -2,18 +2,14 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { ResourceCard } from '@/components/ResourceCard';
-
-interface HobbyPageProps {
-  params: {
-    hobbySlug: string;
-  };
-}
 
 type TabType = 'path' | 'videos' | 'articles' | 'communities' | 'saved';
 
-export default function HobbyPage({ params }: HobbyPageProps) {
-  const { hobbySlug } = params;
+export default function HobbyPage() {
+  const params = useParams();
+  const hobbySlug = params.hobbySlug as string;
 
   const [activeTab, setActiveTab] = useState<TabType>('path');
   const [hobby, setHobby] = useState<any>(null);
