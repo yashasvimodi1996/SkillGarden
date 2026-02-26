@@ -15,9 +15,10 @@ export default function OnboardingPage() {
       try {
         const res = await fetch('/api/hobbies');
         const data = await res.json();
-        setHobbies(data);
+        setHobbies(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch hobbies:', error);
+        setHobbies([]);
       } finally {
         setLoading(false);
       }
@@ -118,6 +119,9 @@ export default function OnboardingPage() {
           {/* Step 1: Select Hobbies */}
           <div className="mb-12">
             <h2 className="text-2xl font-bold mb-6">Step 1: Select 1-3 Hobbies</h2>
+            {hobbies.length === 0 && (
+              <p className="text-gray-500 mb-4">No hobbies available yet. The database may still be loading.</p>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {hobbies.map((hobby) => (
                 <div
